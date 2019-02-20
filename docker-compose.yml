@@ -1,0 +1,48 @@
+version: '2'
+
+services:
+
+  client1:
+    image: roundcube/roundcubemail
+    ports:
+      - "17080:80"
+    environment:
+      - ROUNDCUBEMAIL_DEFAULT_HOST=imap1
+      - ROUNDCUBEMAIL_DEFAULT_PORT=25
+    links:
+      - imap1
+
+  imap1:
+    image: antespi/docker-imap-devel:latest
+    ports:
+      - "17025:25"
+      - "17143:143"
+      - "17993:993"
+    environment:
+      - MAILNAME=imap1.test
+      - MAIL_ADDRESS=address@imap1.test
+      - MAIL_PASS=pass
+
+  client2:
+    image: roundcube/roundcubemail
+    ports:
+      - "18080:80"
+    environment:
+      - ROUNDCUBEMAIL_DEFAULT_HOST=imap2
+      - ROUNDCUBEMAIL_DEFAULT_PORT=25
+    links:
+      - imap2
+
+  imap2:
+    image: antespi/docker-imap-devel:latest
+    ports:
+      - "18025:25"
+      - "18143:143"
+      - "18993:993"
+    environment:
+      - MAILNAME=imap2.test
+      - MAIL_ADDRESS=address@imap2.test
+      - MAIL_PASS=pass
+
+  sendmail:
+    image: relaxart/docker-sendmail
