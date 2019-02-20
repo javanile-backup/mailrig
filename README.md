@@ -1,6 +1,8 @@
-# mailstack
+# Mailstack
 
+```bash
 $ curl -OL javanile.github.io/mailstack/mailstack.php
+```
 
 ```json
 {
@@ -18,4 +20,6 @@ $ curl -OL javanile.github.io/mailstack/mailstack.php
 }
 ```
 
+```bash
 $ php mailstack.php --task mytask.json
+```

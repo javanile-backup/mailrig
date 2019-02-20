@@ -672,26 +672,35 @@ function _composeLine($json)
     return $line;
 }
 
-function _loadFile($file) {
-
+/**
+ * @param $file
+ * @return mixed
+ */
+function _loadFile($file)
+{
     if (!file_exists($file)) {
-        die("(?) file not found: "._striplen($file,54)."\n");
+        die("(?) file not found: "._striplen($file, 54)."\n");
     }
 
     $json = json_decode(file_get_contents($file));
 
     if (json_last_error()) {
-        die("(?) json syntax error: "._striplen($file,51)."\n");
+        die("(?) json syntax error: "._striplen($file, 51)."\n");
     }
 
     return $json;
 }
 
-function _striplen($text,$len) {
-    if (strlen($text)>$len) {
-        return '...'.substr($text,strlen($text)-$len);
+/**
+ * @param $text
+ * @param $len
+ * @return string
+ */
+function _striplen($text, $len)
+{
+    if (strlen($text) > $len) {
+        return '...' . substr($text, strlen($text) - $len);
     } else {
         return $text;
     }
-
 }
