@@ -1,0 +1,9 @@
+version: '2'
+
+services:
+
+  mailman: &mailman
+    build: ../
+    volumes: ['./tasks:/tasks']
+
+  sync1: { <<: *mailman, command: ["--task", "tasks/copy1"] }

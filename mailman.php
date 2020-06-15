@@ -1,6 +1,7 @@
+#!/usr/bin/env php
 <?php
 /**
- * Mailstack
+ * Mailman
  *
  * the only tool managing email boxes.
  */
@@ -11,8 +12,8 @@ define('TEMPFILE', getcwd() . DIRECTORY_SEPARATOR . uniqid());
 
 //
 $argk = array(
-    '--base' => 1,
     '--task' => 1,
+    '--prefix' => 1,
 );
 
 //
@@ -21,37 +22,47 @@ $argi = null;
 $argf = 0;
 
 // Loop command-line arguments
-foreach($argv as $i => $arg) {
-    if ($i != 0) {
-        if (isset($argk[$arg])) {
-            $argi = $arg;
-            $argf = $argk[$argi];
-        } else if ($argf > 0) {
-            $argm[$argi][] = $arg;
-            $argf--;
-        } else {
-            $argm[] = $arg;
+foreach ($argv as $i => $arg) {
+    if ($i == 0) {
+        continue;
+    } else if (isset($argk[$arg])) {
+        $argi = $arg;
+        $argf = $argk[$argi];
+    } else if ($argf > 0) {
+        $argm[$argi][] = $arg;
+        $argf--;
+    } else {
+        $argm[] = $arg;
+    }
+}
+
+foreach ($argk as $arg => $count) {
+    if (isset($argm[$arg][0]) && (!$argm[$arg][0] || $argm[$arg][0][0] == '-')) {
+        _error("Missing '{$arg}' option value");
+    }
+}
+
+if (isset($argm['--task'][0]) && $argm['--task'][0]) {
+    $_argv = _loadTask($argm['--task'][0], isset($argm['--prefix'][0]) ? $argm['--prefix'][0] : '');
+    _args(count($_argv), $_argv);
+} else {
+    _args($argc, $argv);
+}
+
+// Inputs validation
+foreach (['src', 'tgt'] as $key0) {
+    foreach (['host'] as $key1) {
+        if (empty($_ENV[$key0][$key1])) {
+            _error('Missing option: '.$key0.'.'.$key1);
         }
     }
 }
 
-//echo "--\n\n\n";
-
-if ($argm['--task'][0]) {
-    $_argv = _loadActivity($argm['--task'][0], @$argm['--base'][0]);
-    _args(count($_argv), $_argv);
-} else {
-    _args($argc,$argv);
-}
-
-#print_r($_ENV);
-#die();
-
-echo "(!) Connecting source: ";
+echo "(!) Checking source (".$_ENV['src']['host']."): ";
 $S = new IMAP($_ENV['src']);
 echo "\n";
 
-echo "(!) Connecting target: ";
+echo "(!) Checking target (".$_ENV['tgt']['host']."): ";
 $T = new IMAP($_ENV['tgt']);
 echo "\n";
 
@@ -220,10 +231,12 @@ class IMAP
     {
         $this->_c = null;
         $this->_is_gmail = $uri['host'] == 'imap.gmail.com';
-        $this->_c_host = sprintf('{%s',$uri['host']);
+        $this->_c_host = sprintf('{%s', $uri['host']);
+
         if (!empty($uri['port'])) {
-            $this->_c_host.= sprintf(':%d',$uri['port']);
+            $this->_c_host.= sprintf(':%d', $uri['port']);
         }
+
         switch (strtolower(@$uri['scheme'])) {
             case 'imap-ssl':
                 $this->_c_host.= '/ssl';
@@ -253,20 +266,20 @@ class IMAP
         imap_timeout(IMAP_OPENTIMEOUT,20);
         $this->_c = @imap_open($this->_c_host,$uri['user'],$uri['pass'], CL_EXPUNGE);
         $err = imap_errors();
-        if (count($err)==1 && $err[0] == 'SECURITY PROBLEM: insecure server advertised AUTH=PLAIN') {
-            ## do nothig and continue
+        if (count($err) == 1 && $err[0] == 'SECURITY PROBLEM: insecure server advertised AUTH=PLAIN') {
+            ## do nothing and continue
         } else if ($err) {
-            if (count($err)<3) {
-                echo implode(", ",$err)."\n";
+            if (count($err) < 3) {
+                echo implode(", ", $err)."\n";
             } else {
                 echo "\n";
                 foreach($err as $e) {
-                    echo "  - ".wordwrap($e,60,"\n    ")."\n";
+                    echo "  - ".wordwrap($e, 60, "\n    ")."\n";
                 }
             }
             exit;
         } else {
-            echo "success!";
+            echo "OK!";
         }
     }
 
@@ -503,8 +516,8 @@ function _args($argc, $argv)
         $_ENV['tgt']['path'] = '/INBOX';
     }
 
-    $_ENV['src']['user'] = str_replace('__', ' ', $_ENV['src']['user']);
-    $_ENV['tgt']['user'] = str_replace('__', ' ', $_ENV['tgt']['user']);
+    $_ENV['src']['user'] = isset($_ENV['src']['user']) ? str_replace('__', ' ', $_ENV['src']['user']) : '';
+    $_ENV['tgt']['user'] = isset($_ENV['tgt']['user']) ? str_replace('__', ' ', $_ENV['tgt']['user']) : '';
 }
 
 /**
@@ -565,44 +578,34 @@ function _path_skip($path)
     return false;
 }
 
-##
-function _loadActivity($activity, $base) {
-
-    ##
-    $file = $base.'/activities/'.$activity.'.json';
-
-    ##
-    $json = _loadFile($file);
-
-    ##
+/**
+ *
+ * @param $activity
+ * @param $base
+ * @return array
+ */
+function _loadTask($task, $prefix)
+{
+    $taskFile = $prefix.$task.(!pathinfo($task, PATHINFO_EXTENSION) ? '.json' : '');
+    $json = _loadFile($taskFile);
     if (!@$json->source) {
-        die("(?) source not declared: "._striplen($file,49)."\n");
+        _error("(?) Source not declared: "._striplen($taskFile, 49));
+    }
+    if (!@$json->target) {
+        _error("(?) target not declared: "._striplen($taskFile, 49));
     }
 
-    ##
-    $sourceFile = $base.'/accounts/'.$json->source.'.json';
+    $prefix = dirname($taskFile).'/';
 
-    ##
+    $sourceFile = $prefix.$json->source.(!pathinfo($json->source, PATHINFO_EXTENSION) ? '.json' : '');
     $sourceJson = _loadFile($sourceFile);
 
-    ##
-    if (!@$json->target) {
-        die("(?) target not declared: "._striplen($file,49)."\n");
-    }
-
-    ##
-    $targetFile = $base.'/accounts/'.$json->target.'.json';
-
-    ##
+    $targetFile = $prefix.$json->target.(!pathinfo($json->target, PATHINFO_EXTENSION) ? '.json' : '');
     $targetJson = _loadFile($targetFile);
 
-    ##
     $sourceLine = _composeLine($sourceJson);
-
-    ##
     $targetLine = _composeLine($targetJson);
 
-    ##
     $return = array(
         __FILE__,
         '--source',
@@ -611,47 +614,37 @@ function _loadActivity($activity, $base) {
         $targetLine
     );
 
-    ##
     if (isset($json->before) && $json->before) {
         $return[] = '--before';
         $return[] = $json->before;
     }
 
-    ##
     if (isset($json->after) && $json->after) {
         $return[] = '--after';
         $return[] = $json->after;
     }
 
-    ##
-    $action = isset($json->action) ? $json->action : 'copy';
+    $action = isset($json->action) ? $json->action : 'fake';
 
-    ##
     switch ($action) {
-
         case 'copy':
             $return[] = '--copy';
             break;
-
         case 'copy-once':
             $return[] = '--copy';
             $return[] = '--once';
             break;
-
         case 'move-once':
             $return[] = '--wipe';
             $return[] = '--once';
             break;
-
         case 'move':
             $return[] = '--wipe';
             break;
-
         default:
-            die("(?) invalid declared action: "._striplen($file,45)."\n");
+            _error("(?) Invalid task action: "._striplen($taskFile, 45));
     }
 
-    ##
     return $return;
 }
 
@@ -679,16 +672,28 @@ function _composeLine($json)
 function _loadFile($file)
 {
     if (!file_exists($file)) {
-        die("(?) file not found: "._striplen($file, 54)."\n");
+        _error("(?) File not found: "._striplen($file, 54));
     }
 
     $json = json_decode(file_get_contents($file));
 
-    if (json_last_error()) {
-        die("(?) json syntax error: "._striplen($file, 51)."\n");
+    if (!$json || json_last_error()) {
+        _error("(?) JSON syntax error: "._striplen($file, 51));
     }
 
     return $json;
+}
+
+/**
+ * Print-out error message and exit.
+ *
+ * @param $message
+ * @return string
+ */
+function _error($message)
+{
+    echo $message."\n";
+    exit(1);
 }
 
 /**

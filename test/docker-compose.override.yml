@@ -14,6 +14,7 @@ services:
 
   imap1:
     image: antespi/docker-imap-devel:latest
+    container_name: imap1
     ports:
       - "17025:25"
       - "17143:143"
