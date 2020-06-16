@@ -6,4 +6,5 @@ services:
     build: ../
     volumes: ['./tasks:/tasks']
 
-  sync1: { <<: *mailman, command: ["--task", "tasks/copy1"] }
+  move1: { <<: *mailman, command: ["--task", "tasks/move1"] }
+  move2: { <<: *mailman, command: ["--task", "tasks/move2"] }

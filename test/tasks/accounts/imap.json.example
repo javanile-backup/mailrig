@@ -3,5 +3,5 @@
   "username": "${IMAP_USERNAME}",
   "password": "${IMAP_PASSWORD}",
   "host": "${IMAP_HOST}",
-  "port": "25"
+  "port": "${IMAP_PORT}"
 }

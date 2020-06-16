@@ -58,19 +58,23 @@ foreach (['src', 'tgt'] as $key0) {
     }
 }
 
-echo "(!) Checking source (".$_ENV['src']['host']."): ";
+// Checking if source is ready
+echo "Checking source (".$_ENV['src']['host']."): ";
 $S = new IMAP($_ENV['src']);
 echo "\n";
 
-echo "(!) Checking target (".$_ENV['tgt']['host']."): ";
+// Checking if target is ready
+echo "Checking target (".$_ENV['tgt']['host']."): ";
 $T = new IMAP($_ENV['tgt']);
 echo "\n";
 
-echo "(!) Actions: ";
-echo "WIPE =>".($_ENV['wipe']?'yes':'no')." ";
-echo "COPY =>".($_ENV['copy']?'yes':'no')." ";
-echo "ONCE =>".($_ENV['once']?'yes':'no')." ";
-echo "FAKE =>".($_ENV['fake']?'yes':'no');
+// Print-out current actions
+echo "Actions: ";
+echo $_ENV['wipe'] ? 'MOVE ' : '';
+echo $_ENV['copy'] ? 'COPY ' : '';
+echo $_ENV['once'] ? 'ONCE ' : '';
+echo $_ENV['sync'] ? 'SYNC ' : '';
+echo $_ENV['fake'] ? 'FAKE ' : '';
 echo "\n";
 
 //$tgt_path_list = $T->listPath();
@@ -83,9 +87,9 @@ $src_path_list = $S->listPath();
 foreach ($src_path_list as $path) {
 
     // var_dump($path);
-    //echo "S: {$path['name']} = {$path['attribute']}\n";
+    #echo "S: {$path['name']} = {$path['attribute']}\n";
     $nameOffset = strpos($path['name'],'}');
-    $namePath =  $nameOffset > 0 ? substr($path['name'],$nameOffset+1) : $path['name'];
+    $namePath =  $nameOffset > 0 ? substr($path['name'], $nameOffset + 1) : $path['name'];
 
     //
     echo " -> Source path: ".str_pad($namePath, 47);
@@ -103,7 +107,9 @@ foreach ($src_path_list as $path) {
     // print_r($src_path_stat);
     if (empty($src_path_stat['mail_count'])) {
         echo "[skip empty]\n";
-        continue;
+        if (!$_ENV['sync']) {
+            continue;
+        }
     } else {
         echo "[".$src_path_stat['mail_count']." messages]\n";
     }
@@ -225,7 +231,7 @@ class IMAP
     private $_c_base; // Base Path Requested
     private $_is_gmail = false;
     /**
-    Connect to an IMAP
+    * Connect to an IMAP
      */
     function __construct($uri)
     {
@@ -284,8 +290,8 @@ class IMAP
     }
 
     /**
-    List folders matching pattern
-    @param $pat * == all folders, % == folders at current level
+    * List folders matching pattern
+    * @param $pat * == all folders, % == folders at current level
      */
     function listPath($pat='*')
     {
@@ -303,6 +309,9 @@ class IMAP
 
     /**
      * Get a Message.
+     *
+     * @param $index
+     * @return bool
      */
     function mailGet($index)
     {
@@ -311,7 +320,7 @@ class IMAP
     }
 
     /**
-    Store a Message with proper date
+    * Store a Message with proper date
      */
     function mailPut($mail,$opts,$date)
     {
@@ -324,12 +333,12 @@ class IMAP
         if ($buf = imap_errors()) {
             die(print_r($buf,true));
         }
-        return $ret;
 
+        return $ret;
     }
 
     /**
-    Message Info
+    * Message Info
      */
     function mailStat($i)
     {
@@ -340,7 +349,7 @@ class IMAP
     }
 
     /**
-    Immediately Delete and Expunge the message
+    * Immediately Delete and Expunge the message
      */
     function mailWipe($i)
     {
@@ -361,22 +370,17 @@ class IMAP
     }
 
     /**
-    Sets the Current Mailfolder, Creates if Needed
+     * Sets the Current Mailfolder, Creates if Needed
+     *
+     * @param $p
+     * @param bool $make
+     * @return bool
      */
-    function setPath($p,$make=false)
+    function setPath($p, $make = false)
     {
-        // echo "setPath($p);\n";
-        if (substr($p,0,1)!='{') {
-            if ($this->_is_gmail) {
-                $p = $this->_c_host . trim($p,'/');
-            } else {
-                $pa = str_replace(array("/","[Gmail]"),array(".","Gmail"),$p);
-                $p = $this->_c_base . '.' .trim($pa,'/.');
-            }
-        }
+        $p = $this->getFullPath($p);
 
-        //echo "setPath($p);\n";
-
+        echo "setPath($p);\n";
         $ret = imap_reopen($this->_c, $p, CL_EXPUNGE); // Always returns true :(
         $buf = imap_errors();
         if (empty($buf)) {
@@ -384,13 +388,16 @@ class IMAP
         }
 
         $buf = implode(', ',$buf);
-        if (preg_match('/NONEXISTENT/',$buf) ||
-            preg_match('/Mailbox does not exist/',$buf)) {
+
+        if (preg_match('/NONEXISTENT/', $buf) ||
+            preg_match('/Mailbox does not exist/', $buf) ||
+            preg_match('/Mailbox doesn\'t exist/', $buf)
+        ) {
             // Likley Couldn't Open on Gmail Side, So Create
-            $ret = imap_createmailbox($this->_c,$p);
+            $ret = imap_createmailbox($this->_c, $p);
             $buf = imap_errors();
             if (empty($buf)) {
-                imap_reopen($this->_c,$p);
+                imap_reopen($this->_c, $p);
             } else {
                 die(print_r($buf,true)."\n\nFailed to Create setPath($p)\n");
             }
@@ -404,7 +411,44 @@ class IMAP
             }
             return true;
         }
+
         die(print_r($buf,true)."\n\nFailed to Switch setPath($p)\n");
+    }
+
+    /**
+     * Check if is a path name or a full path
+     *
+     * @param $path
+     * @return bool
+     */
+    public function isFullPath($path)
+    {
+        return substr($path, 0, 1) == '{';
+    }
+
+    /**
+     * @param $path
+     * @return string
+     */
+    public function getFullPath($path)
+    {
+        if ($this->isFullPath($path)) {
+            return $path;
+        }
+
+        if ($this->_is_gmail) {
+            $path = $this->_c_host . trim($path, '/');
+        } else {
+            $pa = str_replace(array("/", "[Gmail]"), array(".", "Gmail"), $path);
+            $pathName = trim($pa, '/.');
+            if ($pathName == 'INBOX' && substr($this->_c_base, -6) == '}INBOX') {
+                $path = $this->_c_base;
+            } else {
+                $path = $this->_c_base . '.' . $pathName;
+            }
+        }
+
+        return $path;
     }
 
     /**
@@ -449,6 +493,7 @@ function _args($argc, $argv)
     $_ENV['fake'] = false;
     $_ENV['once'] = false;
     $_ENV['wipe'] = false;
+    $_ENV['sync'] = false;
 
     for ($i = 1; $i < $argc; $i++) {
         switch ($argv[$i]) {
@@ -485,6 +530,9 @@ function _args($argc, $argv)
                 break;
             case '--once':
                 $_ENV['once'] = true;
+                break;
+            case '--sync':
+                $_ENV['sync'] = true;
                 break;
             case '--wipe':
                 $_ENV['wipe'] = true;
@@ -525,7 +573,7 @@ function _args($argc, $argv)
  */
 function _path_map($x)
 {
-    if (preg_match('/}(.+)$/',$x,$m)) {
+    if (preg_match('/}(.+)$/', $x, $m)) {
         switch (strtolower($m[1])) {
             // case 'inbox':         return null;
             case 'deleted items': return '[Gmail]/Trash';
@@ -533,26 +581,32 @@ function _path_map($x)
             case 'junk e-mail':   return '[Gmail]/Spam';
             case 'sent items':    return '[Gmail]/Sent Mail';
         }
-        $x = str_replace('INBOX/',null,$m[1]);
+        $x = str_replace('INBOX/', null, $m[1]);
     }
-    return imap_utf7_encode ( $x );
+
+    return imap_utf7_encode($x);
 }
 
 /**
-@return true if we should skip this path
+ *
+ *
+ * @param $path
+ *
+ * @return bool true if we should skip this path
  */
 function _path_skip($path)
 {
-    if ( ($path['attribute'] & LATT_NOSELECT) == LATT_NOSELECT) {
+    if (($path['attribute'] & LATT_NOSELECT) == LATT_NOSELECT) {
         return true;
     }
+
     // All Mail, Trash, Starred have this attribute
     if ( ($path['attribute'] & 96) == 96) {
         return true;
     }
 
     // Skip by Pattern
-    if (preg_match('/}(.+)$/',$path['name'],$m)) {
+    if (preg_match('/}(.+)$/', $path['name'], $m)) {
         switch (strtolower($m[1])) {
             case '[gmail]/all mail':
             case '[gmail]/sent mail':
@@ -563,7 +617,7 @@ function _path_skip($path)
     }
 
     // By First Folder Part of Name
-    if (preg_match('/}([^\/]+)/',$path['name'],$m)) {
+    if (preg_match('/}([^\/]+)/', $path['name'], $m)) {
         switch (strtolower($m[1])) {
             // This bundle is from Exchange
             case 'journal':
@@ -641,6 +695,10 @@ function _loadTask($task, $prefix)
         case 'move':
             $return[] = '--wipe';
             break;
+        case 'move-sync':
+            $return[] = '--wipe';
+            $return[] = '--sync';
+            break;
         default:
             _error("(?) Invalid task action: "._striplen($taskFile, 45));
     }
@@ -649,7 +707,8 @@ function _loadTask($task, $prefix)
 }
 
 /**
- *
+ * @param $json
+ * @return string
  */
 function _composeLine($json)
 {

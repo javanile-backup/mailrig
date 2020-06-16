@@ -1,0 +1,5 @@
+{
+  "action": "move-sync",
+  "source": "accounts/imap",
+  "target": "accounts/gmail"
+}

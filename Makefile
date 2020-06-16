@@ -13,4 +13,5 @@ fixtures:
     done
 
 tdd: build fixtures
-	docker-compose -f test/docker-compose.yml up --build sync1
+	docker-compose -f test/docker-compose.yml up --build move1
+	#docker-compose -f test/docker-compose.yml up --build move2
