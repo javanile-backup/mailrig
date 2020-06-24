@@ -1,0 +1,5 @@
+{
+  "action": "move",
+  "source": "accounts/imap.1.json",
+  "target": "accounts/imap.2.json"
+}

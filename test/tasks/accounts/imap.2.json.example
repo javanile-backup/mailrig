@@ -1,0 +1,7 @@
+{
+  "protocol": "${IMAP_2_PROTOCOL}",
+  "username": "${IMAP_2_USERNAME}",
+  "password": "${IMAP_2_PASSWORD}",
+  "host": "${IMAP_2_HOST}",
+  "port": "${IMAP_2_PORT}"
+}

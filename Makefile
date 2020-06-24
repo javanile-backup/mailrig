@@ -15,7 +15,7 @@ fixtures:
 tdd: build fixtures
 	#docker-compose -f test/docker-compose.yml up --build --force-recreate
 	#docker-compose -f test/docker-compose.yml up --build move2
-	docker-compose -f test/docker-compose.yml run --rm -T mailrig task tasks/copy.1.json
+	docker-compose -f test/docker-compose.yml run --rm -T mailrig task tasks/move.3.json
 
 push:
 	git add .

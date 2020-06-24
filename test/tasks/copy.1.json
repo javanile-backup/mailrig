@@ -1,5 +1,5 @@
 {
-  "action": "copy-sync",
+  "action": "copy",
   "source": "accounts/gmail.1.json",
   "target": "accounts/gmail.0.json"
 }

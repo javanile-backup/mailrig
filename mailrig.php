@@ -102,12 +102,13 @@ foreach ($src_path_list as $index => $path) {
     if (!$_ENV['sync']) {
         echo "Opening source ... ";
         $S->setPath($path['name']);
-        $src_path_stat = $S->pathStat();
-        if (empty($src_path_stat['mail_count'])) {
+        $sourceMailCount = $S->mailCount();
+        //$src_path_stat = $S->pathStat();
+        if ($sourceMailCount > 0) {
+            echo "(" . $sourceMailCount . " messages)\n";
+        } else {
             echo "(empty) (ignored)\n";
             continue;
-        } else {
-            echo "(" . $src_path_stat['mail_count'] . " messages)\n";
         }
     }
 
@@ -117,20 +118,21 @@ foreach ($src_path_list as $index => $path) {
     $T->setPath($tgt_path); // Creates if needed
 
     // Show info on Target
-    echo 'Opening target ... ';
-    $tgt_path_stat = $T->pathStat();
+    echo 'Indexing target ... ';
+    $targetMailCount = $T->mailCount();
+    //$tgt_path_stat = $T->pathStat();
 
     //echo "T: {$tgt_path_stat['mail_count']} messages\n";
-    if (empty($tgt_path_stat['mail_count'])) {
-        echo "(empty)\n";
+    if ($targetMailCount > 0) {
+        echo '('.$targetMailCount." messages)\n";
     } else {
-        echo '('.$tgt_path_stat['mail_count']." messages)\n";
+        echo "(empty)\n";
     }
     //echo "\n";
 
     // Build Index of Target
     $tgt_mail_list = array();
-    for ($i=1;$i<=$tgt_path_stat['mail_count'];$i++) {
+    for ($i=1; $i <= $targetMailCount; $i++) {
         $mail = $T->mailStat($i);
         $tgt_mail_list[ $mail['message_id'] ] = !empty($mail['subject']) ? $mail['subject'] : "[ No Subject ] Message $i";
     }
@@ -141,7 +143,7 @@ foreach ($src_path_list as $index => $path) {
 
     if (!$_ENV['sync']) {
         $loopStep = -1;
-        $loopStart = $src_path_stat['mail_count'];
+        $loopStart = $sourceMailCount;
         $loopStop = 1;
     } else {
         $loopStep = 1;
@@ -153,7 +155,6 @@ foreach ($src_path_list as $index => $path) {
     //for ($src_idx = $src_path_stat['mail_count']; $src_idx >= 1; $src_idx = $src_idx--) {
     for ($src_idx = $loopStart; $src_idx >= $loopStop; $src_idx += $loopStep) {
 
-        echo $src_idx."\n";
         $stat = $S->mailStat($src_idx);
         if (empty($stat['message_id'])) {
             echo "No more messages.\n";
@@ -491,6 +492,33 @@ class IMAP
         $ret['check_path'] = $res->Mailbox;
         // $ret = array_merge($ret, $res);
         return $ret;
+    }
+
+    /**
+     * Count mail in current mailbox.
+     */
+    public function mailCount()
+    {
+        #$checkTime = time();
+        $check = imap_check($this->_c);
+        if ($errors = imap_errors()) {
+            die(print_r($errors, true));
+        }
+        $checkCount = isset($check->Nmsgs) ? $check->Nmsgs : 0;
+        #$checkTime = time() - $checkTime;
+
+        if ($checkCount) {
+            return intval($checkCount);
+        }
+
+        #$infoTime = time();
+        $info = imap_mailboxmsginfo($this->_c);
+        $infoCount = isset($info->Nmsgs) ? $info->Nmsgs : 0;
+        #$infoTime = time() - $infoTime;
+
+        #echo ">>> mailCount: check({$checkCount},{$checkTime}s) info({$infoCount},{$infoTime}s)\n";
+
+        return intval($infoCount);
     }
 
     /**
