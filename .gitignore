@@ -1,4 +1,6 @@
 .idea/
 vendor/
+test/5ef*
 test/tasks/accounts/*.json
 .env
+*.log
