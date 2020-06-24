@@ -2,9 +2,7 @@ version: '2'
 
 services:
 
-  mailman: &mailman
+  mailrig:
     build: ../
-    volumes: ['./tasks:/tasks']
-
-  move1: { <<: *mailman, command: ["--task", "tasks/move1"] }
-  move2: { <<: *mailman, command: ["--task", "tasks/move2"] }
+    volumes:
+      - .:/etc/mailrig

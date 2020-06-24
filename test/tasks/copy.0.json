@@ -1,0 +1,5 @@
+{
+  "action": "copy",
+  "source": "accounts/gmail.0",
+  "target": "accounts/imap.0"
+}

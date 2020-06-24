@@ -4,8 +4,8 @@ include .env
 export $(shell sed 's/=.*//' .env)
 
 build:
-	chmod +x mailman.php
-	docker-compose -f test/docker-compose.yml build mailman
+	chmod +x mailrig.php docker-entrypoint.sh
+	docker-compose -f test/docker-compose.yml build mailrig
 
 fixtures:
 	for account in test/tasks/accounts/*.json.example; do \
@@ -13,5 +13,13 @@ fixtures:
     done
 
 tdd: build fixtures
-	docker-compose -f test/docker-compose.yml up --build move1
+	#docker-compose -f test/docker-compose.yml up --build --force-recreate
 	#docker-compose -f test/docker-compose.yml up --build move2
+	docker-compose -f test/docker-compose.yml run --rm -T mailrig task tasks/copy.1.json
+
+push:
+	git add .
+	git commit -am "push"
+	git push
+	docker build -t javanile/mailrig .
+	docker push javanile/mailrig

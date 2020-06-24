@@ -1,0 +1,53 @@
+Delivered-To: fbianco.medipav@gmail.com
+Received: by 2002:a92:c008:0:0:0:0:0 with SMTP id q8csp4145984ild;
+        Mon, 14 Jan 2019 21:45:02 -0800 (PST)
+X-Google-Smtp-Source: ALg8bN76vOZ6Y5veyQBk9JG/dMlgFA/LWR2PF0M55dngHW4a4qKtkYG1xBurWqiSedrj7emVrjIH
+X-Received: by 2002:adf:ef0d:: with SMTP id e13mr1423986wro.29.1547531102038;
+        Mon, 14 Jan 2019 21:45:02 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1547531102; cv=none;
+        d=google.com; s=arc-20160816;
+        b=fiiFl+iptHfmmEEymdhJX1EWGqbKnuGq3/jhcOcxuDMYgLZV+NUfgUmAszc39XNxeW
+         d7zdyeg5+Qo//N0YG0aAk2xxrfavkBwZnAXE9gAAT+Bs2MtdBo8ojprLc9bVW4H49TyB
+         JoLUjUlSod7czEqE9bIEtMRgFsy11cVSVDHwzdN2Ivk/99K7BIw0wqA3iuft842R0n5q
+         ctEe027edBLKbpMlv5hLKGVt+MO8wfuK628VdiCrXpEO8toOdLc9SuYujPElkZSNr+aW
+         TQZWl5f3ULCCZA9q4/r2zBdDicdixqaDIHioes21Jl/nDeJsA2qoKjUjcPKydF3/A3DN
+         CW7w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20160816;
+        h=from:date:message-id:subject:to:delivered-to;
+        bh=TJy1nNHoUff+DOdNdJx6KD/I0mt4y9WEhTj8YwNthAY=;
+        b=Jw68hCKaIrCImwULQysXwneDTDLitGDp/FTfM2LRa61I5UfaeDLCOyGE8WjlnnObLT
+         ub/Kc6LsbS5/s780NXdLdZWq7/eWc8tLilDFsi7hpbhaF/PYTjrHjcrGN53hXnz01ORy
+         o44ZKDYhkoPORm6+h2sGvWhLL8/+yrMYbc27CWPQtxr9tkADY8MYUtc1v+1urpljpN/S
+         IjyxTQXnhjNpdTBmmIddnCcGQjSbsXxtUV/6n94eWsLfC7uu17usoRjp3X8g6VOp81h4
+         uHcVs7Hf749MtW6VAB8yIY457rWSzetFS1R6cT04bR5c8j1hTittUwfLUPaIvfYJrvDL
+         HKLg==
+ARC-Authentication-Results: i=1; mx.google.com;
+       spf=pass (google.com: best guess record for domain of medipav@medipav.com designates 31.14.128.92 as permitted sender) smtp.mailfrom=medipav@medipav.com
+Return-Path: <medipav@medipav.com>
+Received: from mail0.medipav.com (mail0.medipav.com. [31.14.128.92])
+        by mx.google.com with ESMTPS id s7si14904980wri.317.2019.01.14.21.45.01
+        for <fbianco.medipav@gmail.com>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 14 Jan 2019 21:45:01 -0800 (PST)
+Received-SPF: pass (google.com: best guess record for domain of medipav@medipav.com designates 31.14.128.92 as permitted sender) client-ip=31.14.128.92;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: best guess record for domain of medipav@medipav.com designates 31.14.128.92 as permitted sender) smtp.mailfrom=medipav@medipav.com
+Received: by mail0.medipav.com (Postfix, from userid 30)
+	id 22EC628ACC; Tue, 15 Jan 2019 06:00:40 +0100 (CET)
+X-Original-To: fbianco@medipav.com
+Delivered-To: fbianco@medipav.com
+Received: by mail0.medipav.com (Postfix, from userid 10001)
+	id DBA5C28ABE; Tue, 15 Jan 2019 06:00:39 +0100 (CET)
+To: fbianco@medipav.com
+Subject: [15/01/2019] CONTROLLA ORARIO CANTIERE
+X-PHP-Originating-Script: 10001:email.php
+Message-Id: <20190115050039.DBA5C28ABE@mail0.medipav.com>
+Date: Tue, 15 Jan 2019 06:00:39 +0100 (CET)
+From: medipav@medipav.com
+
+
+Ciao,
+
+usa questo link per controllare gli orari degli operai
+
+http://crm.medipav.com/vpandacrm/app/giornata/controlla.php?d=2019-01-15&r=fbianco@medipav.com

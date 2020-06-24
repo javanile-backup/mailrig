@@ -1,0 +1,17 @@
+2020-06-24 06:02:54,241 CRIT Set uid to user 0
+2020-06-24 06:02:54,244 INFO supervisord started with pid 8
+2020-06-24 06:02:55,246 INFO spawned: 'Procfile_4' with pid 11
+2020-06-24 06:02:56,267 INFO success: Procfile_4 entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2020-06-24 06:03:01,672 INFO exited: Procfile_4 (exit status 0; expected)
+2020-06-24 06:05:22,606 CRIT Set uid to user 0
+2020-06-24 06:05:22,608 INFO supervisord started with pid 8
+2020-06-24 06:05:23,611 INFO spawned: 'Procfile_4' with pid 11
+2020-06-24 06:05:24,632 INFO success: Procfile_4 entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2020-06-24 06:05:29,676 INFO exited: Procfile_4 (exit status 0; expected)
+2020-06-24 06:13:53,753 CRIT Set uid to user 0
+2020-06-24 06:13:53,754 INFO supervisord started with pid 8
+2020-06-24 06:13:54,757 INFO spawned: 'Procfile_4' with pid 11
+2020-06-24 06:13:55,778 INFO success: Procfile_4 entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2020-06-24 06:14:00,066 WARN received SIGINT indicating exit request
+2020-06-24 06:14:00,066 INFO waiting for Procfile_4 to die
+2020-06-24 06:14:00,068 INFO stopped: Procfile_4 (terminated by SIGTERM)

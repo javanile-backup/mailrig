@@ -1,0 +1,7 @@
+{
+  "protocol": "imap-ssl-novalidate-cert",
+  "username": "${GMAIL_0_USERNAME}",
+  "password": "${GMAIL_0_PASSWORD}",
+  "host": "imap.gmail.com",
+  "port": "993"
+}
